@@ -1,0 +1,12 @@
+[package]
+name = "aoc_2020"
+version = "0.1.0"
+authors = ["Chris AtLee <chris@atlee.ca>"]
+
+[lib]
+bench = false
+
+[dependencies]
+aoc-runner = "0.2.2"
+aoc-runner-derive = "0.2.2"
+itertools = "0.9"
