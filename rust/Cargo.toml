@@ -10,3 +10,4 @@ bench = false
 aoc-runner = "0.2.2"
 aoc-runner-derive = "0.2.2"
 itertools = "0.9"
+regex = "1"

@@ -35,7 +35,7 @@ pub fn part2(input: &Vec<i32>) -> i32 {
 mod tests {
     use super::*;
 
-    const example: &str = "1721
+    const EXAMPLE: &str = "1721
 979
 366
 299
@@ -44,10 +44,10 @@ mod tests {
 
     #[test]
     fn part1_example() {
-        assert_eq!(part1(&lines_to_ints(example)), 514579);
+        assert_eq!(part1(&lines_to_ints(EXAMPLE)), 514579);
     }
 
     fn part2_example() {
-        assert_eq!(part2(&lines_to_ints(example)), 241861950);
+        assert_eq!(part2(&lines_to_ints(EXAMPLE)), 241861950);
     }
 }
