@@ -1,3 +1,4 @@
 .env
+.cookie
 target
 Cargo.lock
