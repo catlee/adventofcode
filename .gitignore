@@ -2,3 +2,4 @@
 .cookie
 target
 Cargo.lock
+__pycache__
