@@ -3,44 +3,59 @@ require "minitest/autorun"
 require "set"
 require "aoc"
 
-class Day11 < Minitest::Test
-  def part1(input, steps)
-    grid = input.lines(chomp:true).map { |line| line.chars.map(&:to_i) }
-    flashes = 0
-    steps.times do
-      # Increase everything by one
-      grid = grid.map { |row| row.map { |n| n + 1 } }
+class Grid
+  attr_accessor :grid
+  attr_reader :flashes
 
-      flashed = Set[]
-      while true
-        did_flash = false
-        grid.each_with_index do |row, y|
-          row.each_with_index do |cell, x|
-            if cell > 9 && ! flashed.include?([x,y])
-              flashes += 1
-              flashed << [x, y]
-              did_flash = true
+  def initialize(input)
+    @flashes = 0
+    @grid = input.lines(chomp:true).map { |line| line.chars.map(&:to_i) }
+  end
 
-              (-1..1).each do |dx|
-                (-1..1).each do |dy|
-                  next if dx == 0 && dy == 0
-                  x1 = x + dx
-                  y1 = y + dy
-                  next if x1 < 0 || y1 < 0
-                  next if x1 >= row.length || y1 >= grid.length
-                  grid[y1][x1] += 1
-                end
+  def all_flashed?
+    @grid.all? { |row| row.all? { |c| c == 0 } }
+  end
+
+  def flash
+    @grid = @grid.map { |row| row.map { |n| n + 1 } }
+
+    flashed = Set[]
+    while true
+      did_flash = false
+      @grid.each_with_index do |row, y|
+        row.each_with_index do |cell, x|
+          if cell > 9 && ! flashed.include?([x,y])
+            @flashes += 1
+            flashed << [x, y]
+            did_flash = true
+
+            (x-1..x+1).each do |ox|
+              (y-1..y+1).each do |oy|
+                next if ox == x && oy == y
+                next if ox < 0 || oy < 0
+                next if ox >= row.length || oy >= @grid.length
+                @grid[oy][ox] += 1
               end
             end
           end
         end
-        break unless did_flash
       end
-
-      # Reset flashed cells to 0
-      grid = grid.map { |row| row.map { |n| n > 9 ? 0 : n } }
+      break unless did_flash
     end
-    flashes
+
+    # Reset flashed cells to 0
+    @grid = @grid.map { |row| row.map { |n| n > 9 ? 0 : n } }
+  end
+end
+
+
+class Day11 < Minitest::Test
+  def part1(input, steps)
+    grid = Grid.new(input)
+    steps.times do
+      grid.flash
+    end
+    grid.flashes
   end
 
   SAMPLE = <<~SAMPLE
@@ -65,41 +80,11 @@ class Day11 < Minitest::Test
   end
 
   def part2(input)
-    grid = input.lines(chomp:true).map { |line| line.chars.map(&:to_i) }
+    grid = Grid.new(input)
+
     (1..).each do |step|
-      # Increase everything by one
-      grid = grid.map { |row| row.map { |n| n + 1 } }
-
-      flashed = Set[]
-      while true
-        did_flash = false
-        grid.each_with_index do |row, y|
-          row.each_with_index do |cell, x|
-            if cell > 9 && ! flashed.include?([x,y])
-              flashed << [x, y]
-              did_flash = true
-
-              (-1..1).each do |dx|
-                (-1..1).each do |dy|
-                  next if dx == 0 && dy == 0
-                  x1 = x + dx
-                  y1 = y + dy
-                  next if x1 < 0 || y1 < 0
-                  next if x1 >= row.length || y1 >= grid.length
-                  grid[y1][x1] += 1
-                end
-              end
-            end
-          end
-        end
-        break unless did_flash
-      end
-
-      # Return when all cells are > 9
-      return step if grid.all? { |row| row.all? { |n| n > 9 }}
-
-      # Reset flashed cells to 0
-      grid = grid.map { |row| row.map { |n| n > 9 ? 0 : n } }
+      grid.flash
+      return step if grid.all_flashed?
     end
   end
 
