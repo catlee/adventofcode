@@ -2,65 +2,9 @@
 require "minitest/autorun"
 require "set"
 require "aoc"
+require_relative "./hashgrid"
 
-class HashGrid
-  attr_reader :data
-
-  def initialize
-    @data = {}
-    @width = nil
-    @height = nil
-  end
-
-  def calc_ranges
-    x_values = [0]
-    y_values = [0]
-    @data.keys.each do |x,y|
-      x_values << x
-      y_values << y
-    end
-    @width = x_values.max
-    @height = y_values.max
-  end
-
-  def width
-    calc_ranges unless @width
-    @width
-  end
-
-  def height
-    calc_ranges unless @height
-    @height
-  end
-
-  def to_s
-    s = ""
-    (0..height).each do |y|
-      (0..width).each do |x|
-        if c = self[x,y]
-          s += c
-        else
-          s += "."
-        end
-      end
-      s += "\n"
-    end
-    s
-  end
-
-  def []=(x, y, v)
-    pos = [x,y]
-    unless @data[pos]
-      @width = nil
-      @height = nil
-    end
-    @data[pos] = v
-  end
-
-  def [](x, y)
-    @data[[x,y]]
-  end
-
+class Grid < HashGrid
   def fold(axis, n)
     newdata = {}
     @data.each_pair do |pos, v|
@@ -80,7 +24,7 @@ class HashGrid
   end
 end
 
-class Day13 Minitest::Test
+class Day13 < Minitest::Test
   SAMPLE = <<~SAMPLE
   6,10
   0,14
@@ -106,7 +50,7 @@ class Day13 Minitest::Test
   SAMPLE
 
   def part1(input)
-    grid = HashGrid.new
+    grid = Grid.new
     folds = []
     input.lines.each do |line|
       if m = /fold along ([xy])=(\d+)/.match(line)
@@ -131,7 +75,7 @@ class Day13 Minitest::Test
   end
 
   def test_part2
-    grid = HashGrid.new
+    grid = Grid.new
     folds = []
     DAY13_lines.each do |line|
       if m = /fold along ([xy])=(\d+)/.match(line)
