@@ -1,9 +1,30 @@
+use itertools::Itertools;
+
+fn parse_elves(input: &str) -> Vec<u32> {
+    input.lines().fold(vec![0], |mut elves, line| {
+        if line == "" {
+            elves.push(0);
+        } else {
+            *elves.last_mut().unwrap() += line.parse::<u32>().unwrap_or(0);
+        }
+        elves
+    })
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
-    None
+    parse_elves(input).iter().copied().max()
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    Some(
+        parse_elves(input)
+            .iter()
+            .sorted()
+            .rev()
+            .take(3)
+            .copied()
+            .sum(),
+    )
 }
 
 fn main() {
@@ -19,12 +40,16 @@ mod tests {
     #[test]
     fn test_part_one() {
         let input = advent_of_code::read_file("examples", 1);
-        assert_eq!(part_one(&input), None);
+        assert_eq!(part_one(&input), Some(24000));
+        let input = advent_of_code::read_file("inputs", 1);
+        assert_eq!(part_one(&input), Some(66487));
     }
 
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 1);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(45000));
+        let input = advent_of_code::read_file("inputs", 1);
+        assert_eq!(part_two(&input), Some(197301));
     }
 }
