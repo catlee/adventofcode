@@ -1,13 +1,15 @@
 use itertools::Itertools;
 
 fn parse_elves(input: &str) -> Vec<u32> {
-    input.lines().fold(vec![0], |mut elves, line| {
-        match line.parse::<u32>() {
-            Ok(n) => *elves.last_mut().unwrap() += n,
-            _ => elves.push(0),
-        }
-        elves
-    })
+    input
+        .split("\n\n")
+        .map(|elf_data| {
+            elf_data
+                .lines()
+                .map(|line| line.parse::<u32>().unwrap_or(0))
+                .sum()
+        })
+        .collect()
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
