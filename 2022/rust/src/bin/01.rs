@@ -2,29 +2,20 @@ use itertools::Itertools;
 
 fn parse_elves(input: &str) -> Vec<u32> {
     input.lines().fold(vec![0], |mut elves, line| {
-        if line == "" {
-            elves.push(0);
-        } else {
-            *elves.last_mut().unwrap() += line.parse::<u32>().unwrap_or(0);
+        match line.parse::<u32>() {
+            Ok(n) => *elves.last_mut().unwrap() += n,
+            _ => elves.push(0),
         }
         elves
     })
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    parse_elves(input).iter().copied().max()
+    parse_elves(input).into_iter().max()
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    Some(
-        parse_elves(input)
-            .iter()
-            .sorted()
-            .rev()
-            .take(3)
-            .copied()
-            .sum(),
-    )
+    Some(parse_elves(input).into_iter().sorted().rev().take(3).sum())
 }
 
 fn main() {
