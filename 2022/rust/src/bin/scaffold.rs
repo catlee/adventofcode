@@ -27,14 +27,26 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_part_one() {
+    fn test_part_one_example() {
         let input = advent_of_code::read_file("examples", DAY);
         assert_eq!(part_one(&input), None);
     }
 
     #[test]
-    fn test_part_two() {
+    fn test_part_one_actual() {
+        let input = advent_of_code::read_file("inputs", DAY);
+        assert_eq!(part_one(&input), None);
+    }
+
+    #[test]
+    fn test_part_two_example() {
         let input = advent_of_code::read_file("examples", DAY);
+        assert_eq!(part_two(&input), None);
+    }
+
+    #[test]
+    fn test_part_two_actual() {
+        let input = advent_of_code::read_file("inputs", DAY);
         assert_eq!(part_two(&input), None);
     }
 }
