@@ -1,25 +1,13 @@
-use std::cmp::Ordering;
-use std::cmp::Ordering::{Equal, Greater, Less};
+use int_enum::IntEnum;
 
-#[derive(PartialEq, Eq, Debug, PartialOrd, Clone)]
+#[repr(u32)]
+#[derive(Debug, Clone, IntEnum, Copy)]
 enum Shape {
     Rock = 0,
     Paper = 1,
     Scissors = 2,
 }
 use Shape::*;
-
-impl Ord for Shape {
-    fn cmp(&self, other: &Shape) -> Ordering {
-        match (self, other) {
-            _ if self == other => Equal,
-            (Rock, Scissors) => Greater,
-            (Paper, Rock) => Greater,
-            (Scissors, Paper) => Greater,
-            _ => Less,
-        }
-    }
-}
 
 impl Shape {
     fn from(c: char) -> Option<Shape> {
@@ -32,36 +20,19 @@ impl Shape {
     }
 
     fn value(&self) -> u32 {
-        match self {
-            Rock => 1,
-            Paper => 2,
-            Scissors => 3,
-        }
+        self.int_value() + 1
     }
 
     fn winner(&self) -> Shape {
-        match self {
-            Rock => Paper,
-            Paper => Scissors,
-            Scissors => Rock,
-        }
+        Shape::from_int((self.int_value() + 1) % 3).unwrap()
     }
 
     fn loser(&self) -> Shape {
-        match self {
-            Rock => Scissors,
-            Paper => Rock,
-            Scissors => Paper,
-        }
+        Shape::from_int((self.int_value() + 2) % 3).unwrap()
     }
 
     fn score(&self, other: &Shape) -> u32 {
-        self.value()
-            + match self.cmp(other) {
-                Equal => 3,
-                Greater => 6,
-                Less => 0,
-            }
+        self.value() + 3 * ((4 + self.int_value() - other.int_value()) % 3)
     }
 
     fn run_round_1(input: &str) -> Option<u32> {
@@ -102,14 +73,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_part_one() {
+    fn test_scores() {
+        assert_eq!(Rock.score(&Paper), 1);
+        assert_eq!(Rock.score(&Scissors), 7);
+    }
+
+    #[test]
+    fn test_part_one_example() {
         let input = advent_of_code::read_file("examples", 2);
         assert_eq!(part_one(&input), Some(15));
     }
 
     #[test]
-    fn test_part_two() {
+    fn test_part_one_actual() {
+        let input = advent_of_code::read_file("inputs", 2);
+        assert_eq!(part_one(&input), Some(12679));
+    }
+
+    #[test]
+    fn test_part_two_example() {
         let input = advent_of_code::read_file("examples", 2);
         assert_eq!(part_two(&input), Some(12));
+    }
+
+    #[test]
+    fn test_part_two_actual() {
+        let input = advent_of_code::read_file("inputs", 2);
+        assert_eq!(part_two(&input), Some(14470));
     }
 }
