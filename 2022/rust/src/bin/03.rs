@@ -16,8 +16,7 @@ pub fn part_one(input: &str) -> Option<u32> {
             let h1: HashSet<_> = line[..midpoint].chars().collect();
             let h2: HashSet<_> = line[midpoint..].chars().collect();
 
-            let i: Vec<&char> = h1.intersection(&h2).collect();
-            Some(score(i.first()?))
+            Some((&h1 & &h2).iter().map(|c| score(c)).sum::<u32>())
         })
         .sum()
 }
@@ -29,11 +28,10 @@ pub fn part_two(input: &str) -> Option<u32> {
         .chunks(3)
         .into_iter()
         .map(|chunk| {
-            let h: HashSet<_> = chunk[0].chars().collect();
-            let i = chunk.iter().fold(h, |h, line| {
-                h.intersection(&line.chars().collect()).copied().collect()
-            });
-            Some(score(i.iter().next()?))
+            let h: HashSet<_> = &(&chunk[0].chars().collect::<HashSet<_>>()
+                & &chunk[1].chars().collect())
+                & &chunk[2].chars().collect();
+            Some(h.iter().map(|c| score(c)).sum::<u32>())
         })
         .sum()
 }
