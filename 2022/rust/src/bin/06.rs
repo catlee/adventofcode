@@ -1,34 +1,24 @@
-use std::collections::HashMap;
+fn find_marker(input: &str, size: usize) -> Option<usize> {
+    let mut accum = 0usize;
+    let bytes = input.bytes().collect::<Vec<u8>>();
 
-fn find_marker(input: &str, size: usize) -> Option<u32> {
-    let chars: Vec<char> = input.chars().collect();
-    let mut h = HashMap::<char, usize>::new();
-
-    for i in 0..chars.len() {
-        *h.entry(chars[i]).or_default() += 1;
+    for (i, b) in bytes.iter().enumerate() {
+        accum ^= 1 << (b - b'a');
         if i >= size {
-            let old = chars[i - size];
-            if let Some(prev) = h.get(&old) {
-                if *prev == 1 {
-                    h.remove(&old);
-                } else {
-                    h.insert(old, prev - 1);
-                }
-            }
-
-            if h.len() == size {
-                return Some(i as u32 + 1);
-            }
+            accum ^= 1 << (bytes[i - size] - b'a');
+        }
+        if accum.count_ones() as usize == size {
+            return Some(i + 1);
         }
     }
     None
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &str) -> Option<usize> {
     find_marker(input, 4)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: &str) -> Option<usize> {
     find_marker(input, 14)
 }
 
