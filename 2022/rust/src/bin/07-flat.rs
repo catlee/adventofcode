@@ -38,8 +38,8 @@ fn parse_cmd_output(input: &str) -> Filesystem {
         .collect::<Vec<&str>>();
 
     for c in commands {
-        if c.starts_with("cd ") {
-            match &c[3..] {
+        match &c[..2] {
+            "cd" => match &c[3..] {
                 "/" => {
                     cwd = vec![];
                 }
@@ -49,21 +49,24 @@ fn parse_cmd_output(input: &str) -> Filesystem {
                 p => {
                     cwd.push(p);
                 }
-            }
-        } else if c.starts_with("ls") {
-            for line in c.lines().skip(1) {
-                let parts = line.split(" ").collect::<Vec<&str>>();
-                match parts[0] {
-                    "dir" => {
-                        let mut d = cwd.clone();
-                        d.push(parts[1]);
-                        fs.0.entry(d.join("/")).or_default();
-                    }
-                    size => {
-                        *fs.0.entry(cwd.join("/")).or_default() += size.parse::<usize>().unwrap();
+            },
+            "ls" => {
+                for line in c.lines().skip(1) {
+                    let parts = line.split(" ").collect::<Vec<&str>>();
+                    match parts[0] {
+                        "dir" => {
+                            let mut d = cwd.clone();
+                            d.push(parts[1]);
+                            fs.0.entry(d.join("/")).or_default();
+                        }
+                        size => {
+                            *fs.0.entry(cwd.join("/")).or_default() +=
+                                size.parse::<usize>().unwrap();
+                        }
                     }
                 }
             }
+            unknown => panic!("Unknown command: {}", unknown),
         }
     }
 
