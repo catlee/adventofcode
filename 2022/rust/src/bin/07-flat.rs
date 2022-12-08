@@ -1,25 +1,21 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
-struct File {
-    name: String,
-    size: usize,
-}
-
 #[derive(Default, Debug)]
-struct Filesystem(HashMap<String, Vec<File>>);
+struct Filesystem(HashMap<String, usize>);
 
 impl Filesystem {
     fn size(&self, dir: &str) -> usize {
         self.0
             .iter()
-            .filter_map(|(d, files)| {
-                if d.starts_with(dir) {
-                    Some(files.iter().map(|f| f.size).sum::<usize>())
-                } else {
-                    None
-                }
-            })
+            .filter_map(
+                |(d, size)| {
+                    if d.starts_with(dir) {
+                        Some(size)
+                    } else {
+                        None
+                    }
+                },
+            )
             .sum()
     }
     fn dirs(&self) -> Vec<&String> {
@@ -64,11 +60,7 @@ fn parse_cmd_output(input: &str) -> Filesystem {
                         fs.0.entry(d.join("/")).or_default();
                     }
                     size => {
-                        let f = File {
-                            name: parts[1].to_string(),
-                            size: size.parse::<usize>().unwrap(),
-                        };
-                        fs.0.entry(cwd.join("/")).or_default().push(f);
+                        *fs.0.entry(cwd.join("/")).or_default() += size.parse::<usize>().unwrap();
                     }
                 }
             }
