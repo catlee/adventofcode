@@ -1,12 +1,7 @@
 use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::one_of,
-    combinator::{map_res, recognize},
-    multi::{many1, separated_list0},
-    IResult,
+    branch::alt, bytes::complete::tag, character::complete::digit1, combinator::map,
+    multi::separated_list0, sequence::delimited, IResult,
 };
-use std::num::ParseIntError;
 
 #[derive(Debug, Eq, PartialEq)]
 enum Packet {
@@ -16,52 +11,36 @@ enum Packet {
 
 use Packet::*;
 
-fn decimal_value(input: &str) -> IResult<&str, Packet> {
-    map_res(recognize(many1(one_of("0123456789"))), |out: &str| {
-        let result: Result<Packet, ParseIntError> = Ok(Int(u32::from_str_radix(out, 10)?));
-        result
-    })(input)
-}
-
 impl Packet {
     fn from(input: &str) -> IResult<&str, Packet> {
-        let (input, _) = tag("[")(input)?;
-        let (input, elements) =
-            separated_list0(tag(","), alt((decimal_value, Packet::from)))(input)?;
-        let (input, _) = tag("]")(input)?;
+        let (input, elements) = delimited(
+            tag("["),
+            separated_list0(tag(","), alt((Packet::int_value, Packet::from))),
+            tag("]"),
+        )(input)?;
 
         Ok((input, List(elements)))
+    }
+
+    fn int_value(input: &str) -> IResult<&str, Packet> {
+        map(digit1, |s: &str| Int(s.parse().unwrap()))(input)
     }
 }
 
 impl PartialOrd for Packet {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        match (self, other) {
-            (Int(a), Int(b)) => a.partial_cmp(&b),
-            (Int(a), List(_)) => List(vec![Int(*a)]).partial_cmp(other),
-            (List(_), Int(b)) => self.partial_cmp(&List(vec![Int(*b)])),
-            (List(a), List(b)) => {
-                for i in 0..a.len() {
-                    if i >= b.len() {
-                        return Some(std::cmp::Ordering::Greater);
-                    }
-                    match a[i].partial_cmp(&b[i]) {
-                        Some(std::cmp::Ordering::Equal) => {}
-                        Some(o) => return Some(o),
-                        None => {
-                            panic!("here: {:?}, {:?}", a[i], b[i]);
-                        }
-                    }
-                }
-                a.len().partial_cmp(&b.len())
-            }
-        }
+        Some(self.cmp(&other))
     }
 }
 
 impl Ord for Packet {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(other).expect("valid order")
+        match (self, other) {
+            (Int(a), Int(b)) => a.cmp(&b),
+            (Int(a), List(_)) => List(vec![Int(*a)]).cmp(other),
+            (List(_), Int(b)) => self.cmp(&List(vec![Int(*b)])),
+            (List(a), List(b)) => a.cmp(&b),
+        }
     }
 }
 
