@@ -14,6 +14,13 @@ pub struct Coord {
     pub y: i32,
 }
 
+impl Coord {
+    // Manhatten size
+    pub fn man_size(&self) -> i32 {
+        self.x.abs() + self.y.abs()
+    }
+}
+
 impl ops::Add<(i32, i32)> for Coord {
     type Output = Self;
 
@@ -32,6 +39,28 @@ impl ops::Sub<(i32, i32)> for Coord {
         Coord {
             x: self.x - rhs.0,
             y: self.y - rhs.1,
+        }
+    }
+}
+
+impl ops::Sub<&Coord> for Coord {
+    type Output = Self;
+
+    fn sub(self, rhs: &Coord) -> Self::Output {
+        Coord {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+        }
+    }
+}
+
+impl ops::Add<&Coord> for Coord {
+    type Output = Self;
+
+    fn add(self, rhs: &Coord) -> Self::Output {
+        Coord {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
         }
     }
 }
