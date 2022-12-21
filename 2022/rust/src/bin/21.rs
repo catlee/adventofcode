@@ -20,12 +20,12 @@ enum Op {
     Div,
 }
 
-type Id = String;
+type Id<'a> = &'a str;
 
 #[derive(Debug, Clone)]
-enum Expression {
+enum Expression<'a> {
     Num(i64),
-    Expr(Id, Op, Id),
+    Expr(Id<'a>, Op, Id<'a>),
 }
 
 use Expression::*;
@@ -48,7 +48,7 @@ fn reval(id: &str, exprs: &HashMap<Id, Expression>) -> i64 {
     let (parent_id, expr) = exprs
         .iter()
         .find(|(_, expr)| match expr {
-            Expr(id1, _, id2) => id1 == id || id2 == id,
+            Expr(id1, _, id2) => id1 == &id || id2 == &id,
             _ => false,
         })
         .unwrap();
@@ -70,21 +70,21 @@ fn reval(id: &str, exprs: &HashMap<Id, Expression>) -> i64 {
     // p = a / b
     //   a = p * b
     //   b = a / p
-    match (parent_id.as_str(), expr) {
-        ("root", Expr(a, _, b)) if a == id => eval(b, exprs),
-        ("root", Expr(a, _, b)) if b == id => eval(a, exprs),
+    match (parent_id, expr) {
+        (&"root", Expr(a, _, b)) if a == &id => eval(b, exprs),
+        (&"root", Expr(a, _, b)) if b == &id => eval(a, exprs),
 
-        (_, Expr(a, Plus, b)) if a == id => reval(parent_id, exprs) - eval(b, exprs),
-        (_, Expr(a, Plus, b)) if b == id => reval(parent_id, exprs) - eval(a, exprs),
+        (_, Expr(a, Plus, b)) if a == &id => reval(parent_id, exprs) - eval(b, exprs),
+        (_, Expr(a, Plus, b)) if b == &id => reval(parent_id, exprs) - eval(a, exprs),
 
-        (_, Expr(a, Minus, b)) if a == id => reval(parent_id, exprs) + eval(b, exprs),
-        (_, Expr(a, Minus, b)) if b == id => eval(a, exprs) - reval(parent_id, exprs),
+        (_, Expr(a, Minus, b)) if a == &id => reval(parent_id, exprs) + eval(b, exprs),
+        (_, Expr(a, Minus, b)) if b == &id => eval(a, exprs) - reval(parent_id, exprs),
 
-        (_, Expr(a, Mult, b)) if a == id => reval(parent_id, exprs) / eval(b, exprs),
-        (_, Expr(a, Mult, b)) if b == id => reval(parent_id, exprs) / eval(a, exprs),
+        (_, Expr(a, Mult, b)) if a == &id => reval(parent_id, exprs) / eval(b, exprs),
+        (_, Expr(a, Mult, b)) if b == &id => reval(parent_id, exprs) / eval(a, exprs),
 
-        (_, Expr(a, Div, b)) if a == id => reval(parent_id, exprs) * eval(b, exprs),
-        (_, Expr(a, Div, b)) if b == id => eval(a, exprs) / reval(parent_id, exprs),
+        (_, Expr(a, Div, b)) if a == &id => reval(parent_id, exprs) * eval(b, exprs),
+        (_, Expr(a, Div, b)) if b == &id => eval(a, exprs) / reval(parent_id, exprs),
 
         _ => panic!("can't handle {:?}", expr),
     }
@@ -98,11 +98,7 @@ fn parse_expr(input: &str) -> IResult<&str, Expression> {
     let (input, id2) = alpha1(input)?;
     Ok((
         input,
-        Expression::Expr(
-            id1.parse().unwrap(),
-            op.to_string().parse().unwrap(),
-            id2.parse().unwrap(),
-        ),
+        Expression::Expr(id1, op.to_string().parse().unwrap(), id2),
     ))
 }
 
@@ -122,7 +118,7 @@ fn parse_line(input: &str) -> IResult<&str, (Id, Expression)> {
     let (input, _) = tag(": ")(input)?;
     let (input, expr) = parse_expression(input)?;
 
-    Ok((input, (id.to_string(), expr)))
+    Ok((input, (id, expr)))
 }
 
 pub fn part_one(input: &str) -> Option<i64> {
