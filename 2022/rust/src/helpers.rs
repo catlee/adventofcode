@@ -95,6 +95,33 @@ impl<T> HashGrid<T> {
         self.data.get(pos)
     }
 
+    pub fn delete(&mut self, pos: &Coord) {
+        self.data.remove(pos);
+        // If this point is on the edge, we need to update our bounds
+        if pos.x == self.bottom_left.x
+            || pos.x == self.top_right.x
+            || pos.y == self.bottom_left.y
+            || pos.y == self.top_right.y
+        {
+            if self.data.len() == 0 {
+                self.bottom_left = Coord { x: 0, y: 0 };
+                self.top_right = Coord { x: 0, y: 0 };
+                return;
+            }
+            self.bottom_left = self.data.keys().nth(1).unwrap().clone();
+            self.top_right = self.bottom_left.clone();
+            for pos in self.data.keys() {
+                self.bottom_left.x = self.bottom_left.x.min(pos.x);
+                self.bottom_left.y = self.bottom_left.y.min(pos.y);
+
+                self.top_right.x = self.top_right.x.max(pos.x);
+                self.top_right.y = self.top_right.y.max(pos.y);
+            }
+            self.width = (self.top_right.x - self.bottom_left.x + 1) as usize;
+            self.height = (self.top_right.y - self.bottom_left.y + 1) as usize;
+        }
+    }
+
     pub fn print(&self, f: impl Fn(Option<&T>) -> String) {
         println!("{}", self.render(f));
     }
@@ -124,7 +151,7 @@ impl<T> HashGrid<T> {
         self.top_right.x = self.top_right.x.max(pos.x);
         self.top_right.y = self.top_right.y.max(pos.y);
 
-        self.width = (self.top_right.x - self.bottom_left.x) as usize;
-        self.height = (self.top_right.y - self.bottom_left.y) as usize;
+        self.width = (self.top_right.x - self.bottom_left.x + 1) as usize;
+        self.height = (self.top_right.y - self.bottom_left.y + 1) as usize;
     }
 }
