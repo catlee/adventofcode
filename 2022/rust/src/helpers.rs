@@ -1,8 +1,4 @@
-/*
- * Use this file if you want to extract helpers from your solutions.
- * Example import from this file: `use advent_of_code::helpers::example_fn;`.
- */
-
+use int_enum::IntEnum;
 use std::collections::HashMap;
 use std::ops;
 
@@ -14,10 +10,57 @@ pub struct Coord {
     pub y: i32,
 }
 
+pub trait IntoCoord {
+    fn into_coord(self) -> Coord;
+}
+
+impl IntoCoord for (i32, i32) {
+    fn into_coord(self) -> Coord {
+        Coord {
+            x: self.0 as i32,
+            y: self.1 as i32,
+        }
+    }
+}
+
+impl IntoCoord for (u32, u32) {
+    fn into_coord(self) -> Coord {
+        Coord {
+            x: self.0 as i32,
+            y: self.1 as i32,
+        }
+    }
+}
+
+impl IntoCoord for (usize, usize) {
+    fn into_coord(self) -> Coord {
+        Coord {
+            x: self.0 as i32,
+            y: self.1 as i32,
+        }
+    }
+}
+
+impl IntoCoord for (isize, isize) {
+    fn into_coord(self) -> Coord {
+        Coord {
+            x: self.0 as i32,
+            y: self.1 as i32,
+        }
+    }
+}
+
 impl Coord {
     // Manhatten size
     pub fn man_size(&self) -> i32 {
         self.x.abs() + self.y.abs()
+    }
+
+    pub fn new<T>(data: T) -> Self
+    where
+        T: IntoCoord,
+    {
+        data.into_coord()
     }
 }
 
@@ -29,6 +72,52 @@ impl ops::Add<(i32, i32)> for Coord {
             x: self.x + rhs.0,
             y: self.y + rhs.1,
         }
+    }
+}
+
+impl ops::Add<(i32, i32)> for &Coord {
+    type Output = Coord;
+
+    fn add(self, rhs: (i32, i32)) -> Self::Output {
+        Coord {
+            x: self.x + rhs.0,
+            y: self.y + rhs.1,
+        }
+    }
+}
+
+impl ops::Add<&Coord> for Coord {
+    type Output = Self;
+
+    fn add(self, rhs: &Coord) -> Self::Output {
+        Coord {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
+    }
+}
+
+impl ops::Add<&Direction> for &Coord {
+    type Output = Coord;
+
+    fn add(self, rhs: &Direction) -> Coord {
+        self + rhs.offsets()
+    }
+}
+
+impl ops::Add<Direction> for Coord {
+    type Output = Coord;
+
+    fn add(self, rhs: Direction) -> Coord {
+        self + rhs.offsets()
+    }
+}
+
+impl ops::Add<Direction> for &Coord {
+    type Output = Coord;
+
+    fn add(self, rhs: Direction) -> Coord {
+        self + rhs.offsets()
     }
 }
 
@@ -50,17 +139,6 @@ impl ops::Sub<&Coord> for Coord {
         Coord {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
-        }
-    }
-}
-
-impl ops::Add<&Coord> for Coord {
-    type Output = Self;
-
-    fn add(self, rhs: &Coord) -> Self::Output {
-        Coord {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
         }
     }
 }
@@ -153,5 +231,60 @@ impl<T> HashGrid<T> {
 
         self.width = (self.top_right.x - self.bottom_left.x + 1) as usize;
         self.height = (self.top_right.y - self.bottom_left.y + 1) as usize;
+    }
+}
+
+#[repr(u8)]
+#[derive(IntEnum, Debug, Copy, Clone, Eq, PartialEq, Hash, Display, FromStr)]
+pub enum Direction {
+    #[display(">")]
+    Right = 0,
+    #[display("v")]
+    Down = 1,
+    #[display("<")]
+    Left = 2,
+    #[display("^")]
+    Up = 3,
+}
+
+impl Direction {
+    pub fn as_char(&self) -> char {
+        match self {
+            Direction::Right => '>',
+            Direction::Down => 'v',
+            Direction::Left => '<',
+            Direction::Up => '^',
+        }
+    }
+}
+
+impl Direction {
+    pub fn reverse(&self) -> Direction {
+        Self::from_int((self.int_value() + 2) % 4).unwrap()
+    }
+
+    pub fn right(&self) -> Direction {
+        Self::from_int((self.int_value() + 1) % 4).unwrap()
+    }
+
+    pub fn left(&self) -> Direction {
+        Self::from_int((self.int_value() + 3) % 4).unwrap()
+    }
+
+    pub fn turn_right(&mut self) {
+        *self = Self::from_int((self.int_value() + 1) % 4).unwrap();
+    }
+
+    pub fn turn_left(&mut self) {
+        *self = Self::from_int((self.int_value() + 3) % 4).unwrap();
+    }
+
+    pub fn offsets(&self) -> (i32, i32) {
+        match self {
+            Direction::Right => (1, 0),
+            Direction::Left => (-1, 0),
+            Direction::Up => (0, -1),
+            Direction::Down => (0, 1),
+        }
     }
 }
