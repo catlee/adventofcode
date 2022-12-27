@@ -24,19 +24,9 @@ fn successors(matrix: &Matrix<char>, pos: &Coord) -> Vec<(Coord, usize)> {
 pub fn part_one(input: &str) -> Option<usize> {
     let g = Matrix::from_rows(input.lines().map(|line| line.chars())).expect("valid input");
 
-    let start = g
-        .indices()
-        .zip(g.values())
-        .find(|(_, &c)| c == 'S')
-        .expect("starting pos")
-        .0;
+    let start = g.items().find(|(_, &c)| c == 'S').expect("starting pos").0;
 
-    let end = g
-        .indices()
-        .zip(g.values())
-        .find(|(_, &c)| c == 'E')
-        .expect("starting pos")
-        .0;
+    let end = g.items().find(|(_, &c)| c == 'E').expect("starting pos").0;
 
     let path = dijkstra(&start, |p| successors(&g, p), |&p| p == end);
 
@@ -46,15 +36,9 @@ pub fn part_one(input: &str) -> Option<usize> {
 pub fn part_two(input: &str) -> Option<usize> {
     let g = Matrix::from_rows(input.lines().map(|line| line.chars())).expect("valid input");
 
-    let end = g
-        .indices()
-        .zip(g.values())
-        .find(|(_, &c)| c == 'E')
-        .expect("starting pos")
-        .0;
+    let end = g.items().find(|(_, &c)| c == 'E').expect("starting pos").0;
 
-    g.indices()
-        .zip(g.values())
+    g.items()
         .filter_map(|(pos, &c)| {
             if c != 'a' && c != 'S' {
                 return None;

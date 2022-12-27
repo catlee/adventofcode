@@ -298,7 +298,7 @@ fn fast_run_grid(input: &str, rounds: u64) -> u64 {
         round_start
     );
 
-    let mut max_height = g.height as i32;
+    let mut max_height = g.height as i32 - 1;
 
     eprintln!("max height: {}", max_height);
 
@@ -329,7 +329,6 @@ fn fast_run_grid(input: &str, rounds: u64) -> u64 {
 }
 
 pub fn part_one(input: &str) -> Option<u64> {
-    //let g = run_grid(input, 2022);
     Some(fast_run_grid(input, 2022))
 }
 
@@ -356,24 +355,24 @@ mod tests {
     #[test]
     fn test_fast_run_grid() {
         let input = advent_of_code::read_file("examples", 17);
-        assert_eq!(run_grid(&input, 63).height, 102);
+        assert_eq!(run_grid(&input, 63).height - 1, 102);
         assert_eq!(fast_run_grid(&input, 63), 102);
 
-        assert_eq!(run_grid(&input, 98).height, 155);
+        assert_eq!(run_grid(&input, 98).height - 1, 155);
         assert_eq!(fast_run_grid(&input, 98), 155);
 
         assert_eq!(
-            run_grid(&input, 99).height as u64,
+            run_grid(&input, 99).height as u64 - 1,
             fast_run_grid(&input, 99)
         );
 
         assert_eq!(
-            run_grid(&input, 200).height as u64,
+            run_grid(&input, 200).height as u64 - 1,
             fast_run_grid(&input, 200)
         );
 
         assert_eq!(
-            run_grid(&input, 1000).height as u64,
+            run_grid(&input, 1000).height as u64 - 1,
             fast_run_grid(&input, 1000)
         );
     }

@@ -256,9 +256,7 @@ impl Direction {
             Direction::Up => '^',
         }
     }
-}
 
-impl Direction {
     pub fn reverse(&self) -> Direction {
         Self::from_int((self.int_value() + 2) % 4).unwrap()
     }
