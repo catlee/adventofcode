@@ -1,69 +1,61 @@
 import { download } from "./aoc";
 
-function calibrationValue(data: string): number {
+function addLines(data: string, func: (a: string) => number): number {
   let lines = data.split("\n");
   let total = 0;
   for (let line of lines) {
     if (line.length === 0) {
       continue;
     }
-    let first = ''
-    let last = ''
 
-    for (let i = 0; i < line.length; i++) {
-      let char = line[i];
-      if (char >= "0" && char <= "9") {
-        if (first === '') {
-          first = char;
-        }
-        last = char;
-      }
-    }
-
-    let number = Number(first + last);
-    total += number;
+    total += func(line);
   }
   return total;
 }
 
+function part1(line: string): number {
+  let first = null;
+  let last = null;
+
+  for (let char of line) {
+    if (char >= "0" && char <= "9") {
+      if (first === null) {
+        first = char;
+      }
+      last = char;
+    }
+  }
+
+  return Number(first + last);
+}
+
 let numbers = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 
-function calibrationValue2(data: string): number {
-  let lines = data.split("\n");
-  let total = 0;
+function part2(line: string): number {
+  let first = '';
+  let last = '';
 
-  for (let line of lines) {
-    if (line.length === 0) {
-      continue;
-    }
-
-    let first = '';
-    let last = '';
-
-    for (let i = 0; i < line.length; i++) {
-      let char = line[i];
-      if (char >= "0" && char <= "9") {
-        if (first == '') {
-          first = char;
-        }
-        last = char;
-      } else {
-        // If any of numbers matches here, save it
-        for (let j = 0; j < numbers.length; j++) {
-          if (line.substring(i, i + numbers[j].length) === numbers[j]) {
-            if (first == '') {
-              first = String(j + 1);
-            }
-            last = String(j + 1);
+  for (let i = 0; i < line.length; i++) {
+    let char = line[i];
+    if (char >= "0" && char <= "9") {
+      if (first == '') {
+        first = char;
+      }
+      last = char;
+    } else {
+      // If any of numbers matches here, save it
+      for (let j = 0; j < numbers.length; j++) {
+        if (line.substring(i, i + numbers[j].length) === numbers[j]) {
+          if (first == '') {
+            first = String(j + 1);
           }
+          last = String(j + 1);
         }
       }
     }
-
-    let number = Number(first + last);
-    total += number;
   }
-  return total;
+
+  return Number(first + last);
 }
 
 let example = `1abc2
@@ -81,22 +73,22 @@ zoneight234
 
 describe("part1", () => {
   it("should work on the example", () => {
-    expect(calibrationValue(example)).toBe(142);
+    expect(addLines(example, part1)).toBe(142);
   });
 
   it("should work on the real input", async () => {
     let data = await download(1);
-    expect(calibrationValue(data)).toBe(54159);
+    expect(addLines(data, part1)).toBe(54159);
   });
 });
 
 describe("part2", () => {
   it("should work on the example", () => {
-    expect(calibrationValue2(example2)).toBe(281);
+    expect(addLines(example2, part2)).toBe(281);
   });
 
   it("should work on the real input", async () => {
     let data = await download(1);
-    expect(calibrationValue2(data)).toBe(53866);
+    expect(addLines(data, part2)).toBe(53866);
   });
 });

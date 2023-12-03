@@ -5,6 +5,10 @@ export async function download(day: number, year?: number): Promise<string> {
     const now = new Date();
     year = now.getFullYear();
   }
+  let session = process.env.AOC_SESSION;
+  if (!session) {
+    throw new Error("AOC_SESSION not set");
+  }
   // Check the local cache, input/year-day.txt
   // If it exists, return it
   // If it doesn't exist, download it, save it, and return it
@@ -17,12 +21,19 @@ export async function download(day: number, year?: number): Promise<string> {
   console.log(`Downloading ${year} day ${day}... from ${url}`);
   return fetch(url, {
     headers: {
-      cookie: `session=${process.env.AOC_SESSION}`,
+      cookie: `session=${session}`,
+      user_agent: "github.com/catlee/adventofcode by chris@atlee.ca",
     },
-  }).then((res) => res.text()).then(async (data) => {
-    fs.writeFileSync(filename, data);
-    return data;
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error(`Failed to download ${year} day ${day}: ${res.statusText}`);
+    }
+    return res;
   })
+    .then((res) => res.text()).then(async (data) => {
+      fs.writeFileSync(filename, data);
+      return data;
+    })
 }
 
 export async function downloadLines(day: number, year?: number): Promise<string[]> {
