@@ -78,7 +78,6 @@ function part2(data: string): number {
   }
 
   // For each *, find how the numbers that are adjacent to it.
-  // If there are exactly two numbers, add the product of those numbers to the total.
   // map of "x,y" -> list of numbers
   let gear_numbers = new Map<string, Set<number>>();
 
@@ -97,6 +96,7 @@ function part2(data: string): number {
   }
 
   let total = 0;
+  // If there are exactly two numbers, add the product of those numbers to the total.
   for (let [_pos, nums] of gear_numbers) {
     if (nums.size == 2) {
       let [a, b] = Array.from(nums);
