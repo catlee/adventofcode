@@ -5,9 +5,17 @@ export async function download(day: number, year?: number): Promise<string> {
     const now = new Date();
     year = now.getFullYear();
   }
-  let session = process.env.AOC_SESSION;
-  if (!session) {
-    throw new Error("AOC_SESSION not set");
+  // Look at ~/.adventofcode.session first
+  // If it exists, use it
+  // If it doesn't exist, look at the AOC_SESSION environment variable
+  let sessionFile = `${process.env.HOME}/.adventofcode.session`;
+  var session: string;
+  if (fs.existsSync(sessionFile)) {
+    session = fs.readFileSync(sessionFile, "utf-8");
+  } else if (process.env.AOC_SESSION) {
+    session = process.env.AOC_SESSION;
+  } else {
+    throw new Error("Could not determine session id; set ~/.adventofcode.session");
   }
   // Check the local cache, input/year-day.txt
   // If it exists, return it
