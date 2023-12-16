@@ -3,6 +3,13 @@ export interface Vector2 {
   y: number;
 }
 
+export enum Direction {
+  North = 0,
+  East = 1,
+  South = 2,
+  West = 3,
+}
+
 export class Grid {
   constructor(public data: string[][]) { }
 
@@ -12,6 +19,10 @@ export class Grid {
       .split("\n")
       .map((line) => line.split(""));
     return new Grid(data);
+  }
+
+  toString() {
+    return this.data.map((line) => line.join("")).join("\n");
   }
 
   get(pos: Vector2): string | undefined {
@@ -37,5 +48,20 @@ export class Grid {
         f({ x: x, y: y }, this.get({ x: x, y: y }));
       }
     }
+  }
+
+  rotateClockwise(): Grid {
+    let newGrid = new Grid([]);
+    for (let x = 0; x < this.width; x++) {
+      newGrid.data[x] = [];
+      for (let y = 0; y < this.height; y++) {
+        newGrid.data[x][y] = this.data[this.height - y - 1][x];
+      }
+    }
+    return newGrid;
+  }
+
+  clone(): Grid {
+    return new Grid(this.data.map((line) => line.slice()));
   }
 }
