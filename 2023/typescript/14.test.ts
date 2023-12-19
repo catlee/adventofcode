@@ -39,7 +39,7 @@ describe("slide north", () => {
   it("should slide north", () => {
     let grid = parseInput(example);
     slideNorth(grid);
-    expect(grid.toString()).toEqual(`
+    expect(grid.toString().trim()).toEqual(`
 OOOO.#.O..
 OO..#....#
 OO..O##..O
@@ -90,7 +90,7 @@ describe("rotate clockwise", () => {
   it("handles the example", () => {
     let grid = parseInput(example);
     grid = grid.rotateClockwise();
-    expect(grid.toString()).toEqual(`
+    expect(grid.toString().trim()).toEqual(`
 ##..O.O.OO
 O....OO...
 O..O#...O.
@@ -109,8 +109,10 @@ O..O#...O.
 describe("slide cycle", () => {
   it("handles the example with one cycle", () => {
     let grid = parseInput(example);
+    grid.default = ".";
     grid = slideCycle(grid);
-    expect(grid.toString()).toEqual(`
+    console.log(grid);
+    expect(grid.toString().trim()).toEqual(`
 .....#....
 ....#...O#
 ...OO##...
@@ -128,7 +130,7 @@ describe("slide cycle", () => {
     grid = slideCycle(grid);
     grid = slideCycle(grid);
     grid = slideCycle(grid);
-    expect(grid.toString()).toEqual(`
+    expect(grid.toString().trim()).toEqual(`
 .....#....
 ....#...O#
 .....##...

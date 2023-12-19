@@ -338,7 +338,7 @@ function part2(data: string): number {
     }
   }
 
-  console.log(grid.data.map((row) => row.join("")).join("\n"));
+  // console.log(grid.data.map((row) => row.join("")).join("\n"));
 
   // Count how many cells have can_escape set to false
   let enclosed_cells = 0;
@@ -352,7 +352,7 @@ function part2(data: string): number {
       }
   });
 
-  console.log(grid.data.map((row) => row.join("")).join("\n"));
+  // console.log(grid.data.map((row) => row.join("")).join("\n"));
 
   return enclosed_cells;
 }

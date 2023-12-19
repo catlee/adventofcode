@@ -48,11 +48,11 @@ function expandSpace(grid: Grid): Grid {
   let new_data: string[][] = [];
   // Copy grid.data into new_data, duplicating any empty rows or columns
   for (let y = 0; y < grid.height; y++) {
-    let row = grid.data[y];
+    // let row = grid.data[y];
     let new_row: string[] = [];
 
     for (let x = 0; x < grid.width; x++) {
-      let cell = row[x];
+      let cell = grid.get({ x, y })!;
       if (empty_cols.includes(x)) {
         new_row.push(cell);
       }
