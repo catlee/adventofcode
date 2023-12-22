@@ -179,3 +179,147 @@ describe("part1", () => {
     expect(part1(data)).toBe(50746);
   });
 });
+
+function plan2points(plans: Plan[]): Vector2[] {
+  let cur: Vector2 = { x: 0, y: 0 };
+  let result = [cur];
+  for (let p of plans) {
+    let { dx, dy } = directionToDeltas.get(p.dir)!;
+    let steps = p.steps + 1;
+    cur = { x: cur.x + dx * steps, y: cur.y + dy * steps };
+    result.push(cur);
+  }
+  if (cur.x != 0 || cur.y != 0) {
+    throw "didn't return back to home";
+  }
+  return result;
+}
+
+describe("plan2points", () => {
+  it("works", () => {
+    let plans: Plan[] = [
+      { dir: "R", steps: 2, colour: "" },
+      { dir: "D", steps: 2, colour: "" },
+      { dir: "L", steps: 2, colour: "" },
+      { dir: "U", steps: 2, colour: "" },
+    ];
+    let points = plan2points(plans);
+    expect(points.length).toBe(5);
+    // We end up back at the start
+    expect(points[4]).toEqual({ x: 0, y: 0 });
+    // We add 1 to each step, so that we enclose the space
+    expect(points[2]).toEqual({ x: 3, y: 3 });
+  })
+})
+
+function area(points: Vector2[]): number {
+  let area = 0.0;
+  let n = points.length;
+  for (let i = 0; i < n; ++i) {
+    area += (points[i].y + points[(i + 1) % n].y) * (points[i].x - points[(i + 1) % n].x);
+    // area += points[i].y * (points[(i + n - 1) % n].x - points[(i + 1) % n].x);
+  }
+  return Math.abs(area / 2.0);
+}
+
+describe("area", () => {
+  it("handles a square", () => {
+    let points: Vector2[] = [
+      { x: 0, y: 0 },
+      { x: 2, y: 0 },
+      { x: 2, y: 2 },
+      { x: 0, y: 2 },
+    ];
+    expect(area(points)).toBe(4);
+  })
+})
+
+function part1_alt(input: string): number {
+  let plans: Plan[] = input.trim().split("\n").map((line) => parsePlan(line));
+  console.log("got plan", plans);
+  let points = plan2points(plans);
+  console.log("got points:", points);
+  return area(points);
+}
+
+describe("part1_alt", () => {
+  it("works for the example", () => {
+    expect(part1_alt(example)).toBe(62);
+  });
+  // it("works for the real data", async () => {
+  //   let data = await download(18);
+  //   expect(part1_alt(data)).toBe(50746);
+  // });
+});
+
+interface Plan2 {
+  dir: string;
+  distance: number;
+};
+
+function plan1toplan2(plan: Plan): Plan2 {
+  let direction = plan.colour.slice(-1);
+  let steps = parseInt(plan.colour.slice(0, -1), 16);;
+  return { dir: direction, distance: steps };
+}
+
+function part2(input: string): number {
+  let g = new Grid();
+  g.default = ".";
+
+  let plans = input.trim().split("\n").map((line) => parsePlan(line));
+  let plan2s = plans.map(plan1toplan2);
+
+  let start: Vector2 = { x: 0, y: 0 };
+  let cur = { ...start };
+
+  let points: Vector2[] = [start];
+
+  for (let p of plan2s) {
+    switch (p.dir) {
+      case "0":
+        cur = { x: cur.x + p.distance, y: cur.y };
+        points.push(cur);
+        break;
+      case "1":
+        cur = { x: cur.x, y: cur.y + p.distance };
+        points.push(cur);
+        break;
+      case "2":
+        cur = { x: cur.x - p.distance, y: cur.y };
+        points.push(cur);
+        break;
+      case "3":
+        cur = { x: cur.x, y: cur.y - p.distance };
+        points.push(cur);
+        break;
+      default:
+        throw `Unsupported direction: ${p.dir}`;
+    }
+  }
+
+  console.log("got", points.length, "points");
+
+  let xs = [...new Set(points.map((p) => p.x))];
+  xs.sort((a, b) => a - b);
+
+  let ys = [...new Set(points.map((p) => p.y))];
+  ys.sort((a, b) => a - b);
+
+  // console.log("xs", xs);
+  // console.log("ys", ys);
+  console.log(xs.length * ys.length, "squares");
+
+  return 0;
+}
+
+describe("part2", () => {
+  // it("works for the example", () => {
+  //   expect(part2(example)).toBe(952408144115);
+  // });
+  // it("works for the real data", async () => {
+  //   let data = await download(18);
+  //   expect(part2(data)).toBe(NaN);
+  // });
+});
+
