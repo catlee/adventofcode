@@ -180,13 +180,37 @@ describe("part1", () => {
   });
 });
 
+// Maps a pair of absolute directions (U/D/L/R) to a relative direction (L/R)
+const directionsToTurns = new Map<string, string>([
+  ["RU", "L"],
+  ["RD", "R"],
+  ["UL", "L"],
+  ["UR", "R"],
+  ["DR", "L"],
+  ["DL", "R"],
+  ["LU", "R"],
+  ["LD", "L"],
+]);
+
 function plan2points(plans: Plan[]): Vector2[] {
   let cur: Vector2 = { x: 0, y: 0 };
   let result = [cur];
-  for (let p of plans) {
-    let { dx, dy } = directionToDeltas.get(p.dir)!;
-    let steps = p.steps + 1;
-    cur = { x: cur.x + dx * steps, y: cur.y + dy * steps };
+
+  let n = plans.length;
+
+  for (let i = 0; i < n; ++i) {
+    let prev_turn = directionsToTurns.get(plans[(i + n - 1) % n].dir + plans[i].dir);
+    let next_turn = directionsToTurns.get(plans[i].dir + plans[(i + 1) % n].dir);
+
+    let { dx, dy } = directionToDeltas.get(plans[i].dir)!;
+    let steps = plans[i].steps + 1;
+    if (prev_turn == "L") {
+      steps--;
+    }
+    if (next_turn == "L") {
+      steps--;
+    }
+    cur = { x: cur.x + steps * dx, y: cur.y + steps * dy };
     result.push(cur);
   }
   if (cur.x != 0 || cur.y != 0) {
@@ -216,8 +240,10 @@ function area(points: Vector2[]): number {
   let area = 0.0;
   let n = points.length;
   for (let i = 0; i < n; ++i) {
-    area += (points[i].y + points[(i + 1) % n].y) * (points[i].x - points[(i + 1) % n].x);
-    // area += points[i].y * (points[(i + n - 1) % n].x - points[(i + 1) % n].x);
+    // Trapezoid formula
+    // area += (points[i].y + points[(i + 1) % n].y) * (points[i].x - points[(i + 1) % n].x);
+    // Shoe-lace formula
+    area += points[i].y * (points[(i + n - 1) % n].x - points[(i + 1) % n].x);
   }
   return Math.abs(area / 2.0);
 }
@@ -236,9 +262,7 @@ describe("area", () => {
 
 function part1_alt(input: string): number {
   let plans: Plan[] = input.trim().split("\n").map((line) => parsePlan(line));
-  console.log("got plan", plans);
   let points = plan2points(plans);
-  console.log("got points:", points);
   return area(points);
 }
 
@@ -246,21 +270,23 @@ describe("part1_alt", () => {
   it("works for the example", () => {
     expect(part1_alt(example)).toBe(62);
   });
-  // it("works for the real data", async () => {
-  //   let data = await download(18);
-  //   expect(part1_alt(data)).toBe(50746);
-  // });
+  it("works for the real data", async () => {
+    let data = await download(18);
+    expect(part1_alt(data)).toBe(50746);
+  });
 });
 
-interface Plan2 {
-  dir: string;
-  distance: number;
-};
+const colourToDirection = new Map<string, string>([
+  ["0", "R"],
+  ["1", "D"],
+  ["2", "L"],
+  ["3", "U"],
+]);
 
-function plan1toplan2(plan: Plan): Plan2 {
-  let direction = plan.colour.slice(-1);
+function plan1toplan2(plan: Plan): Plan {
+  let direction = colourToDirection.get(plan.colour.slice(-1))!;
   let steps = parseInt(plan.colour.slice(0, -1), 16);;
-  return { dir: direction, distance: steps };
+  return { dir: direction, steps: steps, colour: "" };
 }
 
 function part2(input: string): number {
@@ -270,56 +296,18 @@ function part2(input: string): number {
   let plans = input.trim().split("\n").map((line) => parsePlan(line));
   let plan2s = plans.map(plan1toplan2);
 
-  let start: Vector2 = { x: 0, y: 0 };
-  let cur = { ...start };
+  let points = plan2points(plan2s);
 
-  let points: Vector2[] = [start];
-
-  for (let p of plan2s) {
-    switch (p.dir) {
-      case "0":
-        cur = { x: cur.x + p.distance, y: cur.y };
-        points.push(cur);
-        break;
-      case "1":
-        cur = { x: cur.x, y: cur.y + p.distance };
-        points.push(cur);
-        break;
-      case "2":
-        cur = { x: cur.x - p.distance, y: cur.y };
-        points.push(cur);
-        break;
-      case "3":
-        cur = { x: cur.x, y: cur.y - p.distance };
-        points.push(cur);
-        break;
-      default:
-        throw `Unsupported direction: ${p.dir}`;
-    }
-  }
-
-  console.log("got", points.length, "points");
-
-  let xs = [...new Set(points.map((p) => p.x))];
-  xs.sort((a, b) => a - b);
-
-  let ys = [...new Set(points.map((p) => p.y))];
-  ys.sort((a, b) => a - b);
-
-  // console.log("xs", xs);
-  // console.log("ys", ys);
-  console.log(xs.length * ys.length, "squares");
-
-  return 0;
+  return area(points);
 }
 
 describe("part2", () => {
-  // it("works for the example", () => {
-  //   expect(part2(example)).toBe(952408144115);
-  // });
-  // it("works for the real data", async () => {
-  //   let data = await download(18);
-  //   expect(part2(data)).toBe(NaN);
-  // });
+  it("works for the example", () => {
+    expect(part2(example)).toBe(952408144115);
+  });
+  it("works for the real data", async () => {
+    let data = await download(18);
+    expect(part2(data)).toBe(70086216556038);
+  });
 });
 

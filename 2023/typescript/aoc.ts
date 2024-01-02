@@ -1,6 +1,15 @@
 import fs from "fs";
 
 export async function download(day: number, year?: number): Promise<string> {
+  // Check the current path for a year
+  // If it exists, use it
+  // If it doesn't exist, use the current year
+  if (!year) {
+    let m = process.cwd().match(/\/(20\d{2})\//);
+    if (m) {
+      year = parseInt(m[1]);
+    }
+  }
   if (!year) {
     const now = new Date();
     year = now.getFullYear();

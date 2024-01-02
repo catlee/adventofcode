@@ -7,6 +7,7 @@ enum Pulse {
 interface Module {
   name: string;
   pulse(sender: string, pulse: Pulse): Pulse | undefined;
+  on_pulse?: (pulse: Pulse) => void;
 }
 
 class FlipFlop implements Module {
@@ -52,12 +53,15 @@ class Conjunction implements Module {
     this.memory = new Map();
     inputs.forEach((n) => { this.memory.set(n, Pulse.LOW) });
   }
+  on_pulse?: (pulse: Pulse) => void;
 
   pulse(sender: string, pulse: Pulse): Pulse | undefined {
     this.memory.set(sender, pulse);
     if ([...this.memory.values()].every((v) => v == Pulse.HIGH)) {
+      if (this.on_pulse) { this.on_pulse(Pulse.LOW) }
       return Pulse.LOW;
     }
+    if (this.on_pulse) { this.on_pulse(Pulse.HIGH) }
     return Pulse.HIGH;
   }
 }
@@ -234,38 +238,40 @@ describe("part1", () => {
 function part2(input: string): number {
   let w = Wiring.fromString(input);
 
-  // ls is upstream of w
+  // ls is upstream of rx
   // ls is a Conjunction. It outputs low when all its upstreams are high
   // so when are its upstreams all high?
   // is there a pattern?
-  let ls = w.modules.get("ls")! as Conjunction;
+  // let ls = w.modules.get("ls")! as Conjunction;
 
-  let m = w.modules.get("qm")! as Conjunction;
-
-  // kb: n % 1
-  // bf: 16...31, 48..63  = (n/16) % 1
-  // sj: 32...63 = (n/32) % 1
-  // ...
-  // maybe we can simplify the wiring. can we remove redundant Conjunction modules?
-  // two in a row each with a single input can be removed?
-  //
-  // or can we watch each conjunction module's input to find a pattern?
-
+  // Get all of ls's upstreams
+  let upstreams: string[] = [];
+  let seen = new Set<string>();
   let n = 0;
-  while (n < 200) {
+  let nums: number[] = [];
+  w.connections.forEach((targets, name) => {
+    if (targets.includes("ls")) {
+      upstreams.push(name);
+      w.modules.get(name)!.on_pulse = (pulse: Pulse) => {
+        if (!seen.has(name) && pulse == Pulse.HIGH) {
+          seen.add(name);
+          nums.push(n);
+        }
+      }
+    }
+  });
+
+  while (seen.size < upstreams.length) {
     n += 1;
     w.pushButton();
-    if ([...m.memory.values()].some((v) => v == Pulse.HIGH)) {
-      console.log(n, m.memory);
-    }
   }
 
-  return NaN;
+  return nums.reduce((a, b) => a * b, 1);
 }
 
 describe("part2", () => {
   it("works for the real data", async () => {
     let data = await download(20);
-    expect(part2(data)).toBe(0);
+    expect(part2(data)).toBe(232605773145467);
   });
 })
