@@ -1,4 +1,6 @@
 import { download } from "./aoc";
+// import { math } from "mathjs";
+var math = require('mathjs');
 
 class Vector3 {
   constructor(public x: number, public y: number, public z: number) { }
@@ -134,5 +136,47 @@ describe("part1", () => {
   it('solves the real data', async () => {
     let data = await download(24);
     expect(part1(data, 200_000_000_000_000, 400_000_000_000_000)).toBe(15318);
+  })
+})
+
+function vec3toarray(v: Vector3): number[] {
+  return [v.x, v.y, v.z];
+}
+
+function part2(input: string) {
+  const hailstones = input.trim().split('\n').map(Hailstone.fromString);
+
+  let p0 = vec3toarray(hailstones[0].start);
+  let p1 = math.subtract(vec3toarray(hailstones[1].start), p0);
+  let p2 = math.subtract(vec3toarray(hailstones[2].start), p0);
+
+  let v0 = vec3toarray(hailstones[0].velocity);
+  let v1 = math.subtract(vec3toarray(hailstones[1].velocity), v0);
+  let v2 = math.subtract(vec3toarray(hailstones[2].velocity), v0);
+
+  // t1 = -((p1 x p2) * v2) / ((v1 x p2) * v2)
+  let t1 = -math.divide(math.multiply(math.cross(p1, p2), v2) , math.multiply(math.cross(v1, p2), v2));
+  // t2 = -((p1 x p2) * v1) / ((p1 x v2) * v1)
+  let t2 = -math.divide(math.multiply(math.cross(p1, p2), v1) , math.multiply(math.cross(p1, v2), v1));
+
+  console.log("t1:", t1);
+  console.log("t2:", t2);
+
+  let c1 = math.add(vec3toarray(hailstones[1].start), math.multiply(t1, vec3toarray(hailstones[1].velocity)));
+  let c2 = math.add(vec3toarray(hailstones[2].start), math.multiply(t2, vec3toarray(hailstones[2].velocity)));
+
+  let v = math.divide(math.subtract(c2, c1), math.subtract(t2, t1))
+  let p = math.subtract(c1, math.multiply(t1, v));
+  return p[0] + p[1] + p[2];
+}
+
+describe("part2", () => {
+  it("solves the example", () => {
+    expect(part2(example)).toBe(47);
+  })
+
+  it("solves the real data", async () => {
+    let data = await download(24);
+    expect(part2(data)).toBe(870379016024859);
   })
 })

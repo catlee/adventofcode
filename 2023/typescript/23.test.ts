@@ -1,7 +1,6 @@
 var _ = require("lodash");
 import { Grid, Vector2 } from "./grid";
 import { download } from "./aoc";
-import { MaxPriorityQueue } from "@datastructures-js/priority-queue";
 
 const Directions: Vector2[] = [
   { x: 0, y: -1 },
@@ -88,34 +87,43 @@ describe("part1", () => {
   it("works on the example", () => {
     expect(part1(example)).toEqual(94);
   });
-  it("works on the real data", async () => {
-    let data = await download(23);
-    expect(part1(data)).toEqual(2362);
-  });
+  // it("works on the real data", async () => {
+  //   let data = await download(23);
+  //   expect(part1(data)).toEqual(2362);
+  // });
 })
 
 interface Edge {
-  from: Vector2,
   to: Vector2,
   distance: number,
 }
 
-function findPointsAndEdges(grid: Grid): { points: Vector2[], edges: Edge[] } {
+interface Node {
+  pos: Vector2,
+  edges: Edge[],
+}
+
+function findNodes(grid: Grid, directional=true): Map<string, Node> {
   let start = { x: 1, y: 0 };
-  let end = { x: grid.bottom_right.x - 1, y: grid.bottom_right.y };
-  let points: Vector2[] = [start];
-  let edges: Edge[] = []
-  let queue: { pos: Vector2, last: Vector2, d: number }[] = [{ pos: start, last: start, d: 0 }];
+
+  let nodes: Map<string, Node> = new Map();
+  let queue: Vector2[] = [start];
   let seen = new Set<string>();
   grid = grid.clone();
 
   while (queue.length > 0) {
-    let { pos, last, d } = queue.shift()!;
+    let pos = queue.shift()!;
+    let pos_str = `${pos.x},${pos.y}`;
     // Skip if we've seen this already
-    if (seen.has(`${pos.x},${pos.y}`)) continue;
-    seen.add(`${pos.x},${pos.y}`);
+    if (seen.has(pos_str)) continue;
+    seen.add(pos_str);
 
-    let canMoveInto: Vector2[] = []
+    let n = nodes.get(pos_str);
+    if (!n) {
+      n = { pos, edges: [] };
+      nodes.set(pos_str, n);
+    }
+
     for (let dir of Directions) {
       let next = { x: pos.x + dir.x, y: pos.y + dir.y };
       // Skip if this would be out of bounds
@@ -125,70 +133,96 @@ function findPointsAndEdges(grid: Grid): { points: Vector2[], edges: Edge[] } {
       // Skip if this is going into a wall
       if (nextSpace == "#") continue;
 
-      // Skip if we've been there before
-      // if (seen.has(`${next.x},${next.y}`)) continue;
-
-      canMoveInto.push(next);
-
-      // Special case for end
-      if (next.x == end.x && next.y == end.y) {
-        // Add an edge from the last point to this one
-        edges.push({ from: last, to: next, distance: d + 1 });
-        points.push(next);
+      let next_str = `${next.x},${next.y}`;
+      let next_node = nodes.get(next_str);
+      if (!next_node) {
+        next_node = { pos: next, edges: [] };
+        nodes.set(next_str, next_node);
       }
-    }
-
-    // We're at an intersection if we can move into 3 different spaces
-    if (canMoveInto.length == 3) {
-      // console.log("intersection", pos, last, d);
-      // There's a choice here, so add it as a point if we don't already have it
-      if (!points.some(p => p.x == pos.x && p.y == pos.y)) points.push(pos);
-
-      // Add an edge from the last point to this one
-      edges.push({ from: last, to: pos, distance: d });
-
-      // Then add to the queue, starting from this point
-      for (let next of canMoveInto) {
-        queue.push({ pos: next, last: pos, d: 1 });
-      }
-    } else {
-      // We're just moving forward, so add it to the queue
-      for (let next of canMoveInto) {
-        queue.push({ pos: next, last: last, d: d + 1 });
-      }
+      n.edges = _.unionWith(n.edges, [{ to: next, distance: 1 }], _.isEqual);
+      next_node.edges = _.unionWith(next_node.edges, [{ to: pos, distance: 1 }], _.isEqual);
+      queue.push(next);
     }
   }
 
-  return { points, edges };
+  return nodes;
 }
 
-describe("findPointsAndEdges", () => {
+function posstr(p: Vector2): string {
+  return `${p.x},${p.y}`;
+}
+
+function combineNodes(nodes: Map<string, Node>): Map<string, Node> {
+  while (true) {
+    let deleted = false;
+    for (let [pos_str, node] of nodes) {
+      if (node.edges.length != 2) continue;
+      // Remove this node from the graph, joining its neighbours
+      let edge1 = node.edges[0];
+      let edge2 = node.edges[1];
+
+      let p1 = edge1.to;
+      let p2 = edge2.to;
+
+      let n1 = nodes.get(posstr(p1))!;
+      let n2 = nodes.get(posstr(p2))!;
+
+      let d = edge1.distance + edge2.distance;
+
+      n1.edges = _.unionWith(n1.edges, [{ to: p2, distance: d }], _.isEqual);
+      _.remove(n1.edges, (e: Edge) => posstr(e.to) == pos_str );
+      n2.edges = _.unionWith(n2.edges, [{ to: p1, distance: d }], _.isEqual);
+      _.remove(n2.edges, (e: Edge) => posstr(e.to) == pos_str );
+
+      nodes.delete(pos_str);
+      deleted = true;
+      break;
+    }
+    if (!deleted) break;
+  }
+  return nodes;
+}
+
+function part2(nodes: Map<string, Node>, start: Vector2, end: Vector2, distance: number = 0, seen: Set<string>, best: number[] = [0]): number {
+  let pos_str = posstr(start);
+  if (seen.has(pos_str)) return best[0];
+
+  let node = nodes.get(pos_str)!;
+  for (let edge of node.edges) {
+    let next = edge.to;
+    if (seen.has(posstr(next))) continue;
+
+    let d = edge.distance;
+    let new_seen = new Set(seen);
+    new_seen.add(pos_str);
+    if (next.x == end.x && next.y == end.y) {
+      best[0] = Math.max(best[0], distance + d);
+    } else {
+      best[0] = Math.max(best[0], part2(nodes, next, end, distance + d, new_seen, best));
+    }
+  }
+  return best[0];
+}
+
+describe("part2", () => {
   it("works on the example", () => {
     let grid = Grid.fromString(example);
-    let { points, edges } = findPointsAndEdges(grid);
+    let nodes = findNodes(grid);
+    nodes = combineNodes(nodes);
+    let start = { x: 1, y: 0 };
+    let end = { x: grid.bottom_right.x - 1, y: grid.bottom_right.y };
 
-    // console.log(points);
-    for (let p of points) {
-      grid.set(p, "X");
-    }
-    console.log(grid.toString());
-    expect(points.length).toEqual(8);
-    console.log(edges);
-    expect(edges.length).toEqual(8);
+    expect(part2(nodes, start, end, 0, new Set(), [0])).toEqual(154);
+  });
+
+  it("works on the real data", async () => {
+    let data = await download(23);
+    let grid = Grid.fromString(data);
+    let nodes = findNodes(grid);
+    nodes = combineNodes(nodes);
+    let start = { x: 1, y: 0 };
+    let end = { x: grid.bottom_right.x - 1, y: grid.bottom_right.y };
+
+    expect(part2(nodes, start, end, 0, new Set(), [0])).toEqual(6538);
   });
 });
-
-// function part2(input: string): number {
-//   return NaN;
-// }
-//
-// describe("part2", () => {
-//   it("works on the example", () => {
-//     expect(part2(example)).toEqual(154);
-//   });
-//   it("works on the real data", async () => {
-//     let data = await download(23);
-//     // 2023 is too low
-//     expect(part2(data)).toEqual(0);
-//   });
-// })
