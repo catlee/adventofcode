@@ -3,10 +3,8 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 const max_input_size = 1_000_000;
 
-const HttpError = error{DownloadError};
 const AocError = error{
     DownloadError,
-    TokenError,
 };
 
 var _token: [1000]u8 = undefined;
@@ -15,7 +13,6 @@ fn getSessionToken() ![]const u8 {
     // Look in ENV for AOC_SESSION_TOKEN
     // Or in ~/.adventofcode.session
     if (std.posix.getenv("AOC_SESSION_TOKEN")) |token| {
-        // std.debug.print("Got {s} as the token\n", .{token});
         return token;
     }
 
@@ -24,7 +21,6 @@ fn getSessionToken() ![]const u8 {
     const filename = try std.fmt.bufPrint(&filenamebuf, "{s}/.adventofcode.session", .{home});
 
     const token = try std.fs.cwd().readFile(filename, &_token);
-    // std.debug.print("Got {s} with {d} bytes as the token\n", .{ token, token.len });
     return _token[0..token.len];
 }
 
@@ -80,7 +76,7 @@ fn fetchInput(alloc: Allocator, year: u16, day: u8) ![]u8 {
         std.debug.print("status={d}\n", .{req.response.status});
         std.debug.print("{d} header bytes returned:\n{s}\n", .{ hlength, buf[0..hlength] });
         std.debug.print("{s}\n", .{body[0..bodysize]});
-        return HttpError.DownloadError;
+        return AocError.DownloadError;
     }
 }
 
@@ -88,14 +84,11 @@ pub fn getData(alloc: Allocator, year: u16, day: u8) ![]u8 {
     var pathbuf: [100]u8 = undefined;
     const file_path = try std.fmt.bufPrint(&pathbuf, "inputs/{d}-{:0>2}.txt", .{ year, day });
 
-    // std.debug.print("Reading file: {s}\n", .{file_path});
-
     return if (std.fs.cwd().readFileAlloc(alloc, file_path, max_input_size)) |data| {
         return data;
     } else |_| {
         if (fetchInput(alloc, year, day)) |data| {
             // Write to the file and then return the data
-            // std.debug.print("Writing to {s}\n", .{file_path});
             try std.fs.cwd().makePath("inputs");
             try std.fs.cwd().writeFile(.{ .sub_path = file_path, .data = data });
             return data;
@@ -145,4 +138,12 @@ pub fn main() !void {
     }
 
     return;
+}
+
+pub fn expect(expected: anytype, actual: anytype) !void {
+    if (expected == actual) {
+        return;
+    }
+    std.debug.print("expected {any}; got {any}\n", .{ expected, actual });
+    return error.TestUnexpectedResult;
 }
