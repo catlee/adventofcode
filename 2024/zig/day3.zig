@@ -54,19 +54,16 @@ fn parse(s: []const u8) ?struct { a: usize, b: usize } {
 }
 
 fn part1(program: []const u8) !usize {
-    var offset: ?usize = 0;
+    var offset: usize = 0;
     var sum: usize = 0;
     while (true) {
-        if (find_substr("mul(", program, offset.?)) |o| {
-            if (find_substr(")", program, o)) |closing| {
-                if (parse(program[o + 4 .. closing])) |numbers| {
-                    sum += numbers.a * numbers.b;
-                }
+        offset = find_substr("mul(", program, offset) orelse break;
+        if (find_substr(")", program, offset)) |closing| {
+            if (parse(program[offset + 4 .. closing])) |numbers| {
+                sum += numbers.a * numbers.b;
             }
-            offset = o + 1;
-        } else {
-            break;
         }
+        offset += 1;
     }
     return sum;
 }
@@ -76,19 +73,15 @@ fn part2(program: []const u8) !usize {
     var sum: usize = 0;
     var disable_offset = find_substr("don't()", program, 0) orelse program.len;
     while (true) {
-        if (find_substr("mul(", program, offset)) |o| {
-            offset = o;
-            if (offset > disable_offset) {
-                offset = find_substr("do()", program, disable_offset) orelse program.len;
-                disable_offset = find_substr("don't()", program, offset) orelse program.len;
-            } else if (find_substr(")", program, offset)) |closing| {
-                if (parse(program[offset + 4 .. closing])) |numbers| {
-                    sum += numbers.a * numbers.b;
-                }
-                offset = offset + 1;
+        offset = find_substr("mul(", program, offset) orelse break;
+        if (offset > disable_offset) {
+            offset = find_substr("do()", program, disable_offset) orelse program.len;
+            disable_offset = find_substr("don't()", program, offset) orelse program.len;
+        } else if (find_substr(")", program, offset)) |closing| {
+            if (parse(program[offset + 4 .. closing])) |numbers| {
+                sum += numbers.a * numbers.b;
             }
-        } else {
-            break;
+            offset += 1;
         }
     }
     return sum;
