@@ -103,9 +103,6 @@ pub fn splitLines(alloc: Allocator, data: []const u8) !std.ArrayList([]const u8)
     var lines = std.ArrayList([]const u8).init(alloc);
     var iter = std.mem.splitScalar(u8, data, '\n');
     while (iter.next()) |line| {
-        if (line.len == 0) {
-            continue;
-        }
         try lines.append(line);
     }
     return lines;
