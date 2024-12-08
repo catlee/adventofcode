@@ -3,7 +3,6 @@ const std = @import("std");
 const print = std.debug.print;
 const expect = aoc.expect;
 const alloc = std.testing.allocator;
-// const alloc = std.heap.page_allocator;
 
 const Rule = struct {
     before: i16,

@@ -99,13 +99,17 @@ pub fn getData(alloc: Allocator, year: u16, day: u8) ![]u8 {
     };
 }
 
-pub fn splitLines(alloc: Allocator, data: []const u8) !std.ArrayList([]const u8) {
-    var lines = std.ArrayList([]const u8).init(alloc);
-    var iter = std.mem.splitScalar(u8, data, '\n');
-    while (iter.next()) |line| {
-        try lines.append(line);
+pub fn split(alloc: Allocator, data: []const u8, sep: u8) !std.ArrayList([]const u8) {
+    var parts = std.ArrayList([]const u8).init(alloc);
+    var iter = std.mem.splitScalar(u8, data, sep);
+    while (iter.next()) |part| {
+        try parts.append(part);
     }
-    return lines;
+    return parts;
+}
+
+pub fn splitLines(alloc: Allocator, data: []const u8) !std.ArrayList([]const u8) {
+    return split(alloc, data, '\n');
 }
 
 pub fn splitToNumbers(alloc: Allocator, data: []const u8) !std.ArrayList(isize) {
