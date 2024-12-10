@@ -205,6 +205,44 @@ fn part1(data: []const u8) !usize {
     return ranges.checkSum();
 }
 
+fn part1_2(data: []const u8) !usize {
+    var ranges = try diskMaptoRanges(data);
+    defer ranges.deinit();
+
+    var blocks = std.ArrayList(?usize).init(alloc);
+    defer blocks.deinit();
+    var emptyIndex: usize = 99999;
+    var lastBlock: usize = 0;
+
+    for (ranges.data.items) |r| {
+        for (r.start..r.end) |i| {
+            try blocks.append(r.id);
+            if (r.id == null) {
+                emptyIndex = std.mem.min(usize, &[_]usize{ i, emptyIndex });
+            } else {
+                lastBlock = std.mem.max(usize, &[_]usize{ i, lastBlock });
+            }
+        }
+    }
+
+    while (lastBlock > emptyIndex) {
+        blocks.items[emptyIndex] = blocks.items[lastBlock];
+        blocks.items[lastBlock] = null;
+
+        while (blocks.items[lastBlock] == null) : (lastBlock -= 1) {}
+        while (blocks.items[emptyIndex] != null) : (emptyIndex += 1) {}
+    }
+
+    var sum: usize = 0;
+    for (blocks.items, 0..) |id, i| {
+        if (id == null) {
+            continue;
+        }
+        sum += i * id.?;
+    }
+    return sum;
+}
+
 fn part2(data: []const u8) !usize {
     var ranges = try diskMaptoRanges(data);
     defer ranges.deinit();
@@ -224,12 +262,15 @@ fn part2(data: []const u8) !usize {
 test "part 1 example" {
     try expect(1928, try part1(example));
     try expect(60, try part1("12345"));
+
+    try expect(1928, try part1_2(example));
+    try expect(60, try part1_2("12345"));
 }
 
 test "part 1 actual" {
     const data = try aoc.getData(alloc, 2024, 9);
     defer alloc.free(data);
-    try expect(6341711060162, try part1(data));
+    try expect(6341711060162, try part1_2(data));
 }
 
 test "part 2 example" {
