@@ -148,3 +148,96 @@ pub fn expect(expected: anytype, actual: anytype) !void {
     std.debug.print("expected {any}; got {any}\n", .{ expected, actual });
     return error.TestUnexpectedResult;
 }
+
+pub const Point = struct {
+    x: isize,
+    y: isize,
+
+    pub fn isInside(self: Point, top_left: Point, bottom_right: Point) bool {
+        return self.x >= top_left.x and self.x <= bottom_right.x and self.y >= top_left.y and self.y <= bottom_right.y;
+    }
+};
+
+pub const Direction = enum {
+    North,
+    East,
+    South,
+    West,
+};
+
+pub const HashGrid = struct {
+    width: isize = undefined,
+    height: isize = undefined,
+    points: HashT,
+
+    left: isize = undefined,
+    right: isize = undefined,
+    top: isize = undefined,
+    bottom: isize = undefined,
+
+    const Self = @This();
+    const HashT = std.AutoHashMap(Point, u8);
+
+    pub fn init(a: std.mem.Allocator) Self {
+        return .{
+            .points = HashT.init(a),
+        };
+    }
+
+    pub fn deinit(self: *Self) void {
+        self.points.deinit();
+    }
+
+    pub fn clone(self: *const Self) !Self {
+        var newGrid = Self.init(self.points.allocator);
+        var iter = self.points.iterator();
+        while (iter.next()) |e| {
+            try newGrid.set(e.key_ptr.*, e.value_ptr.*);
+        }
+        return newGrid;
+    }
+
+    pub fn set(self: *Self, p: Point, v: u8) !void {
+        try self.points.put(p, v);
+        if (self.points.count() == 1) {
+            self.left = p.x;
+            self.right = p.x;
+            self.top = p.y;
+            self.bottom = p.y;
+            self.width = 1;
+            self.height = 1;
+        } else {
+            self.left = std.mem.min(isize, &[_]isize{ p.x, self.left });
+            self.right = std.mem.max(isize, &[_]isize{ p.x, self.right });
+            self.bottom = std.mem.min(isize, &[_]isize{ p.y, self.bottom });
+            self.top = std.mem.max(isize, &[_]isize{ p.y, self.top });
+            self.width = (self.right - self.left) + 1;
+            self.height = (self.top - self.bottom) + 1;
+        }
+    }
+
+    pub fn get(self: *const Self, p: Point) ?u8 {
+        return self.points.get(p);
+    }
+
+    pub fn isInside(self: *const Self, p: Point) bool {
+        return p.x >= self.left and p.x <= self.right and p.y >= self.bottom and p.y <= self.top;
+    }
+
+    pub fn print(self: *const Self) void {
+        var y: isize = self.bottom;
+        while (y <= self.top) : (y += 1) {
+            var x: isize = self.left;
+            while (x <= self.right) : (x += 1) {
+                const p = .{ .x = x, .y = y };
+                const c = self.get(p);
+                if (c != null) {
+                    std.debug.print("{?c}", .{c});
+                } else {
+                    std.debug.print(".", .{});
+                }
+            }
+            std.debug.print("\n", .{});
+        }
+    }
+};
