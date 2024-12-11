@@ -44,7 +44,7 @@ fn fetchInput(alloc: Allocator, year: u16, day: u8) ![]u8 {
 
     const extra_headers = [_]std.http.Header{.{ .name = "Cookie", .value = cookie_header }};
 
-    const options = .{
+    const options: std.http.Client.RequestOptions = .{
         .server_header_buffer = &buf,
         .headers = .{ .user_agent = .{ .override = "catlee's agent github.com/catlee/adventofcode" } },
         .extra_headers = &extra_headers,

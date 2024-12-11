@@ -59,6 +59,9 @@ fn part1(input: []const u8) !usize {
 
     var safe_reports: usize = 0;
     for (lines.items) |line| {
+        if (line.len == 0) {
+            continue;
+        }
         const numbers = try aoc.splitToNumbers(alloc, line);
         defer _ = numbers.deinit();
         if (is_safe(numbers.items)) {
@@ -75,6 +78,9 @@ fn part2(input: []const u8) !usize {
 
     var safe_reports: usize = 0;
     for (lines.items) |line| {
+        if (line.len == 0) {
+            continue;
+        }
         const numbers = try aoc.splitToNumbers(alloc, line);
         defer _ = numbers.deinit();
         if (try could_be_safe(numbers.items)) {

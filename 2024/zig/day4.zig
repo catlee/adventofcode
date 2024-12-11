@@ -78,8 +78,9 @@ fn part2(input: [][]const u8) usize {
 }
 
 test "part1 example" {
-    const lines = try aoc.splitLines(alloc, example);
+    var lines = try aoc.splitLines(alloc, example);
     defer lines.deinit();
+
     try expect(18, part1(lines.items));
 }
 
@@ -87,13 +88,17 @@ test "part1 actual" {
     const data = try aoc.getData(alloc, 2024, 4);
     defer alloc.free(data);
 
-    const lines = try aoc.splitLines(alloc, data);
+    var lines = try aoc.splitLines(alloc, data);
     defer lines.deinit();
+
+    while (lines.getLast().len == 0) {
+        _ = lines.pop();
+    }
     try expect(2599, part1(lines.items));
 }
 
 test "part2 example" {
-    const lines = try aoc.splitLines(alloc, example);
+    var lines = try aoc.splitLines(alloc, example);
     defer lines.deinit();
     try expect(9, part2(lines.items));
 }
@@ -102,7 +107,11 @@ test "part2 actual" {
     const data = try aoc.getData(alloc, 2024, 4);
     defer alloc.free(data);
 
-    const lines = try aoc.splitLines(alloc, data);
+    var lines = try aoc.splitLines(alloc, data);
     defer lines.deinit();
+
+    while (lines.getLast().len == 0) {
+        _ = lines.pop();
+    }
     try expect(1948, part2(lines.items));
 }
