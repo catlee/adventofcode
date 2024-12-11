@@ -112,11 +112,14 @@ pub fn splitLines(alloc: Allocator, data: []const u8) !std.ArrayList([]const u8)
     return split(alloc, data, '\n');
 }
 
-pub fn splitToNumbers(alloc: Allocator, data: []const u8) !std.ArrayList(isize) {
-    var numbers = std.ArrayList(isize).init(alloc);
+pub fn splitToNumbers(T: type, alloc: Allocator, data: []const u8) !std.ArrayList(T) {
+    var numbers = std.ArrayList(T).init(alloc);
     var iter = std.mem.splitScalar(u8, data, ' ');
     while (iter.next()) |num| {
-        const n = try std.fmt.parseInt(isize, num, 10);
+        if (num.len == 0) {
+            continue;
+        }
+        const n = try std.fmt.parseInt(T, num, 10);
         try numbers.append(n);
     }
     return numbers;
