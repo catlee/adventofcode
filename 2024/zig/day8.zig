@@ -89,6 +89,7 @@ fn calculateAntiNodes(antennas: Antennas) !aoc.HashGrid {
 
     const top_left: aoc.Point = .{ .x = 0, .y = 0 };
     const bottom_right: aoc.Point = .{ .x = @intCast(antennas.width - 1), .y = @intCast(antennas.height - 1) };
+    const box = aoc.Box{ .top_left = top_left, .bottom_right = bottom_right };
 
     // For each antenna type, work by pairs
     var antennaIt = antennas.antennaPositions.iterator();
@@ -102,10 +103,10 @@ fn calculateAntiNodes(antennas: Antennas) !aoc.HashGrid {
                 const dy = p2.y - p1.y;
                 const a1: aoc.Point = .{ .x = p1.x - dx, .y = p1.y - dy };
                 const a2: aoc.Point = .{ .x = p2.x + dx, .y = p2.y + dy };
-                if (a1.isInside(top_left, bottom_right)) {
+                if (a1.isInside(box)) {
                     try antiNodes.set(a1, '#');
                 }
-                if (a2.isInside(top_left, bottom_right)) {
+                if (a2.isInside(box)) {
                     try antiNodes.set(a2, '#');
                 }
             }
@@ -120,6 +121,7 @@ fn calculateAntiNodes2(antennas: Antennas) !aoc.HashGrid {
 
     const top_left: aoc.Point = .{ .x = 0, .y = 0 };
     const bottom_right: aoc.Point = .{ .x = @intCast(antennas.width - 1), .y = @intCast(antennas.height - 1) };
+    const box = aoc.Box{ .top_left = top_left, .bottom_right = bottom_right };
 
     // For each antenna type, work by pairs
     var antennaIt = antennas.antennaPositions.iterator();
@@ -132,13 +134,13 @@ fn calculateAntiNodes2(antennas: Antennas) !aoc.HashGrid {
                 const dy = p2.y - p1.y;
 
                 var a1: aoc.Point = p2;
-                while (a1.isInside(top_left, bottom_right)) {
+                while (a1.isInside(box)) {
                     try antiNodes.set(a1, '#');
                     a1.x -= dx;
                     a1.y -= dy;
                 }
                 var a2: aoc.Point = p1;
-                while (a2.isInside(top_left, bottom_right)) {
+                while (a2.isInside(box)) {
                     try antiNodes.set(a2, '#');
                     a2.x += dx;
                     a2.y += dy;
@@ -157,7 +159,7 @@ fn part1(input: []const u8) !usize {
     var antiNodes = try calculateAntiNodes(antennas);
     defer antiNodes.deinit();
 
-    return antiNodes.points.count();
+    return antiNodes.grid.count();
 }
 
 fn part2(input: []const u8) !usize {
@@ -167,7 +169,7 @@ fn part2(input: []const u8) !usize {
     var antiNodes = try calculateAntiNodes2(antennas);
     defer antiNodes.deinit();
 
-    return antiNodes.points.count();
+    return antiNodes.grid.count();
 }
 
 test "part 1 example" {

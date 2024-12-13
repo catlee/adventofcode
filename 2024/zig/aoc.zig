@@ -152,7 +152,7 @@ pub fn expect(expected: anytype, actual: anytype) !void {
     return error.TestUnexpectedResult;
 }
 
-pub const Point = struct {
+pub const Point1 = struct {
     x: isize,
     y: isize,
 
@@ -168,7 +168,12 @@ pub const Direction = enum {
     West,
 };
 
-pub const HashGrid = struct {
+const containers = @import("containers.zig");
+pub const HashGrid = containers.HashGrid(isize, u8);
+pub const Point = containers.Point(isize);
+pub const Box = containers.Box(isize);
+
+pub const HashGrid1 = struct {
     width: isize = undefined,
     height: isize = undefined,
     points: HashT,
