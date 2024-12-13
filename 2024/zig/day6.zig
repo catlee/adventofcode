@@ -234,12 +234,11 @@ fn part2(input: []const u8) !usize {
             continue;
         }
 
-        var new_grid = try grid.clone();
-        try new_grid.set(pos.*, '#');
-        defer new_grid.deinit();
-        if (try guardLoops(new_grid, guard)) {
+        try grid.set(pos.*, '#');
+        if (try guardLoops(grid, guard)) {
             good_placements += 1;
         }
+        try grid.set(pos.*, '.');
     }
     return good_placements;
 }
