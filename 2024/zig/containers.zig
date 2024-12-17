@@ -11,6 +11,10 @@ pub fn Point(K: type) type {
         pub fn isInside(self: *const Self, b: Box(K)) bool {
             return self.x >= b.top_left.x and self.x <= b.bottom_right.x and self.y >= b.top_left.y and self.y <= b.bottom_right.y;
         }
+
+        pub fn add(self: *const Self, other: Self) Self {
+            return .{ .x = self.x + other.x, .y = self.y + other.y };
+        }
     };
 }
 
@@ -68,6 +72,10 @@ pub fn HashGrid(P: type, K: type) type {
 
         pub fn get(self: *const Self, p: PointType) ?K {
             return self.grid.get(p);
+        }
+
+        pub fn unset(self: *Self, p: PointType) void {
+            _ = self.grid.remove(p);
         }
     };
 }
