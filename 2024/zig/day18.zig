@@ -124,15 +124,21 @@ test "part1 actual" {
     try expect(454, try part1(points, 71, 1024));
 }
 
-fn part2(data: []const u8, size: comptime_int, bytes: usize) !?Point {
-    var i = bytes;
+fn part2(data: []const u8, size: comptime_int, start: usize) !?Point {
     var points = try parsePoints(data);
     defer points.deinit();
+    var last_good: usize = start;
+    var first_bad: usize = points.items.len - 1;
     while (true) {
-        if (try part1(points, size, i) == null) {
-            return points.items[i - 1];
+        const guess = (last_good + first_bad) / 2;
+        if (try part1(points, size, guess) == null) {
+            first_bad = guess;
+        } else {
+            last_good = guess;
         }
-        i += 1;
+        if (first_bad == last_good + 1) {
+            return points.items[first_bad - 1];
+        }
     }
 }
 
