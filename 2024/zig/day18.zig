@@ -76,9 +76,11 @@ fn part1(points: Points, size: comptime_int, bytes: usize) !?usize {
     };
 
     var queue = std.PriorityDequeue(Item, void, Item.compareFn).init(alloc, {});
+    try queue.ensureTotalCapacity(size * size);
     defer queue.deinit();
     try queue.add(Item{ .pos = Point{ 0, 0 }, .distance = 0 });
     var seen = std.AutoHashMap(Point, void).init(alloc);
+    try seen.ensureTotalCapacity(size * size);
     defer seen.deinit();
 
     while (queue.count() > 0) {
@@ -90,7 +92,7 @@ fn part1(points: Points, size: comptime_int, bytes: usize) !?usize {
         const x = item.pos[0];
         const y = item.pos[1];
 
-        if (x == end[0] and y == end[1]) {
+        if (std.meta.eql(item.pos, end)) {
             return item.distance;
         }
         if (x > 0 and grid[x - 1][y] == '.') {
@@ -113,6 +115,7 @@ fn part1(points: Points, size: comptime_int, bytes: usize) !?usize {
 test "part1 example" {
     var points = try parsePoints(example);
     defer points.deinit();
+
     try expect(22, try part1(points, 7, 12));
 }
 
