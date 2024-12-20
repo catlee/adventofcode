@@ -21,26 +21,36 @@ const example =
 const Cache = std.StringHashMap(usize);
 
 fn ways_to_make(cache: *Cache, design: []const u8, patterns: []const []const u8) !usize {
-    if (design.len == 0) {
-        return 1;
-    }
-    if (cache.get(design)) |rv| {
-        return rv;
+    _ = cache;
+    // Create a table of size design.len + 1
+    // table[i] is the number of ways to make the substring design[0..i]
+    var table = try alloc.alloc(usize, design.len + 1);
+    defer alloc.free(table);
+
+    // Initialize table to 0
+    @memset(table, 0);
+
+    for (1..design.len + 1) |i| {
+        const prefix = design[0..i];
+
+        for (patterns) |p| {
+            // If prefix equals p, then there's one more way to make design[0..i]; increment table[i]
+            // if (std.mem.eql(u8, prefix, p)) {
+            //     table[i] += 1;
+            // }
+
+            // If p is a suffix of prefix, then we can add how many ways we had to make table[p.len - i]
+            if (std.mem.endsWith(u8, prefix, p)) {
+                if (prefix.len == p.len) {
+                    table[i] += 1;
+                } else {
+                    table[i] += table[i - p.len];
+                }
+            }
+        }
     }
 
-    var count: usize = 0;
-    for (patterns) |p| {
-        if (p.len > design.len) {
-            continue;
-        }
-        if (!std.mem.startsWith(u8, design, p)) {
-            continue;
-        }
-        const suffix_ways = try ways_to_make(cache, design[p.len..], patterns);
-        count += suffix_ways;
-    }
-    try cache.put(design, count);
-    return count;
+    return table[design.len];
 }
 
 fn part1(data: []const u8) !usize {
