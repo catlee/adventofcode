@@ -84,6 +84,20 @@ mod tests {
         assert_eq!(0, part1(&input));
         Ok(())
     }
+
+    #[test]
+    #[ignore]
+    fn test_part2_example() {
+        assert_eq!(0, part2(PART1_EXAMPLE));
+    }
+
+    #[test]
+    #[ignore]
+    fn test_part2() -> Result<()> {
+        let input = aoc::todays_input!()?;
+        assert_eq!(0, part2(&input));
+        Ok(())
+    }
 }
 "##
     .to_string()
